@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PS99 Lisans Sistemi</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { background: #f5f5f5; padding: 20px; border-radius: 10px; }
+        textarea { width: 100%; height: 100px; }
+        button { background: #4CAF50; color: white; border: none; padding: 10px 15px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PS99 Lisans Sistemi</h1>
+        <p>Lisans anahtarınızı oluşturun veya kontrol edin:</p>
+        
+        <h3>Lisans Oluştur</h3>
+        <button onclick="generateKey()">12 Saatlik Key Oluştur</button>
+        <button onclick="generateKey(24)">1 Günlük Key Oluştur</button>
+        <div id="generatedKey"></div>
+        
+        <h3>Lisans Doğrula</h3>
+        <input type="text" id="keyToVerify" placeholder="Lisans anahtarını girin">
+        <button onclick="verifyKey()">Doğrula</button>
+        <div id="verificationResult"></div>
+        
+        <h3>Mevcut Keyler</h3>
+        <textarea id="keyList" readonly></textarea>
+    </div>
+
+    <script>
+        // Basit key listesi (localStorage kullanıyoruz)
+        if(!localStorage.getItem('ps99Keys')) {
+            localStorage.setItem('ps99Keys', JSON.stringify({}));
+        }
+        
+        function generateKey(hours = 12) {
+            const keys = JSON.parse(localStorage.getItem('ps99Keys'));
+            const newKey = 'PS99-' + Math.random().toString(36).substring(2, 15);
+            const expiry = new Date();
+            expiry.setHours(expiry.getHours() + hours);
+            
+            keys[newKey] = expiry.toISOString();
+            localStorage.setItem('ps99Keys', JSON.stringify(keys));
+            
+            document.getElementById('generatedKey').innerHTML = `
+                <p><strong>Yeni Key:</strong> ${newKey}</p>
+                <p><strong>Süre:</strong> ${hours} saat</p>
+                <p><strong>Bitiş:</strong> ${expiry.toLocaleString()}</p>
+            `;
+            
+            updateKeyList();
+        }
+        
+        function verifyKey() {
+            const key = document.getElementById('keyToVerify').value;
+            const keys = JSON.parse(localStorage.getItem('ps99Keys'));
+            const now = new Date();
+            
+            if(keys[key] && new Date(keys[key]) > now) {
+                document.getElementById('verificationResult').innerHTML = `
+                    <p style="color:green;">✅ Key geçerli!</p>
+                    <p>Bitiş tarihi: ${new Date(keys[key]).toLocaleString()}</p>
+                `;
+            } else {
+                document.getElementById('verificationResult').innerHTML = `
+                    <p style="color:red;">❌ Key geçersiz veya süresi dolmuş</p>
+                `;
+            }
+        }
+        
+        function updateKeyList() {
+            const keys = JSON.parse(localStorage.getItem('ps99Keys'));
+            let text = '';
+            const now = new Date();
+            
+            for(const key in keys) {
+                const expiry = new Date(keys[key]);
+                const isValid = expiry > now;
+                text += `${key} | ${expiry.toLocaleString()} | ${isValid ? '✅' : '❌'}\n`;
+            }
+            
+            document.getElementById('keyList').value = text;
+        }
+        
+        // Sayfa yüklendiğinde key listesini güncelle
+        updateKeyList();
+    </script>
+</body>
+</html>
