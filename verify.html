@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Key Doğrulama API</title>
+</head>
+<body>
+    <script>
+        // Key doğrulama endpoint'i
+        const key = new URLSearchParams(window.location.search).get('key');
+        fetch('keys.json')
+            .then(response => response.json())
+            .then(keys => {
+                const expiry = keys[key];
+                const isValid = expiry && new Date(expiry) > new Date();
+                
+                const result = {
+                    valid: isValid,
+                    expires: expiry || null
+                };
+                
+                document.write(JSON.stringify(result));
+            });
+    </script>
+</body>
+</html>
